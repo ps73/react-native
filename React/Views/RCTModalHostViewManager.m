@@ -19,8 +19,10 @@ RCT_ENUM_CONVERTER(
     UIModalPresentationStyle,
     (@{
       @"fullScreen" : @(UIModalPresentationFullScreen),
+#if !TARGET_OS_TV
       @"pageSheet" : @(UIModalPresentationPageSheet),
       @"formSheet" : @(UIModalPresentationFormSheet),
+#endif
       @"overFullScreen" : @(UIModalPresentationOverFullScreen),
     }),
     UIModalPresentationFullScreen,
@@ -45,8 +47,6 @@ RCT_ENUM_CONVERTER(
 @end
 
 @interface RCTModalHostViewManager () <RCTModalHostViewInteractor>
-
-@property (nonatomic, copy) dispatch_block_t dismissWaitingBlock;
 
 @end
 
@@ -79,16 +79,9 @@ RCT_EXPORT_MODULE()
   if (_presentationBlock) {
     _presentationBlock([modalHostView reactViewController], viewController, animated, completionBlock);
   } else {
-    __weak typeof(self) weakself = self;
     [[modalHostView reactViewController] presentViewController:viewController
                                                       animated:animated
-                                                    completion:^{
-                                                      !completionBlock ?: completionBlock();
-                                                      __strong typeof(weakself) strongself = weakself;
-                                                      !strongself.dismissWaitingBlock
-                                                          ?: strongself.dismissWaitingBlock();
-                                                      strongself.dismissWaitingBlock = nil;
-                                                    }];
+                                                    completion:completionBlock];
   }
 }
 
@@ -99,13 +92,7 @@ RCT_EXPORT_MODULE()
   if (_dismissalBlock) {
     _dismissalBlock([modalHostView reactViewController], viewController, animated, nil);
   } else {
-    self.dismissWaitingBlock = ^{
-      [viewController.presentingViewController dismissViewControllerAnimated:animated completion:nil];
-    };
-    if (viewController.presentingViewController) {
-      self.dismissWaitingBlock();
-      self.dismissWaitingBlock = nil;
-    }
+    [viewController.presentingViewController dismissViewControllerAnimated:animated completion:nil];
   }
 }
 
@@ -129,5 +116,6 @@ RCT_EXPORT_VIEW_PROPERTY(onShow, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(identifier, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(supportedOrientations, NSArray)
 RCT_EXPORT_VIEW_PROPERTY(onOrientationChange, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onRequestClose, RCTDirectEventBlock)
 
 @end

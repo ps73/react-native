@@ -13,10 +13,11 @@
 
 @class RCTBridge;
 @class RCTModalHostViewController;
+@class RCTTVRemoteHandler;
 
 @protocol RCTModalHostViewInteractor;
 
-@interface RCTModalHostView : UIView <RCTInvalidating>
+@interface RCTModalHostView : UIView <RCTInvalidating, UIAdaptivePresentationControllerDelegate>
 
 @property (nonatomic, copy) NSString *animationType;
 @property (nonatomic, assign) UIModalPresentationStyle presentationStyle;
@@ -30,6 +31,11 @@
 
 @property (nonatomic, copy) NSArray<NSString *> *supportedOrientations;
 @property (nonatomic, copy) RCTDirectEventBlock onOrientationChange;
+@property (nonatomic, copy) RCTDirectEventBlock onRequestClose;
+
+#if TARGET_OS_TV
+@property (nonatomic, strong) RCTTVRemoteHandler *tvRemoteHandler;
+#endif
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
 
